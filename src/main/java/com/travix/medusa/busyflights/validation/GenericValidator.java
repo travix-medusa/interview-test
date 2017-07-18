@@ -16,10 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @param <T> The type of the object to be validated.
  */
-public class GenericValidator<T> {
+public abstract class GenericValidator<T> {
 
     @Autowired
-    private Validator validator;
+    protected Validator validator;
 
     public ValidationResponse validate(T in) {
         List<String> errors = new ArrayList<String>();
@@ -31,9 +31,13 @@ public class GenericValidator<T> {
         Set<ConstraintViolation<T>> violations = this.validator.validate(in);
         errors = violations.stream().map(ConstraintViolation::getMessage).collect(Collectors.toList());
 
+        errors.addAll(this.validateInternalProperties(in));
+
         if (!errors.isEmpty()) {
             return ValidationResponse.newErrorResponse(errors);
         }
         return ValidationResponse.newSuccessResponse();
     }
+
+    protected abstract List<String> validateInternalProperties(T in);
 }
